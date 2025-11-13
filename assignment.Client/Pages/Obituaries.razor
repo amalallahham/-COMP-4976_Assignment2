@@ -1,0 +1,175 @@
+@page "/obituaries"
+@using assignment.Client.Models
+@inject assignment.Client.Services.IObituariesService ObituariesService
+
+@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Obituaries</h3>
+
+    <AuthorizeView>
+        <Authorized>
+            <button class="btn btn-primary" @onclick='() => NavManager.NavigateTo("/obituaries/create")'>
+                Create Obituary
+            </button>
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+<input value="@searchTerm" @oninput="OnSearchChanged" placeholder="Search by name..." class="form-control mb-3" />
+
+@if (isLoading)
+{
+    <p>Loading obituaries...</p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (obituaries is null || obituaries.Count == 0)
+{
+    <p>No obituaries found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Date of Birth</th>
+                <th>Date of Death</th>
+                <th>Biography</th>
+                <th>Created By</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var o in obituaries)
+            {
+                <tr>
+                    <td>@o.FullName</td>
+                    <td>@(o.DOB?.ToString("yyyy-MM-dd") ?? "-")</td>
+                    <td>@(o.DOD?.ToString("yyyy-MM-dd") ?? "-")</td>
+                    <td>@o.Biography</td>
+                    <td>@o.CreatorEmail</td>
+
+                    <td>
+                        <button class="btn btn-primary btn-sm me-2" @onclick="() => ViewObituary(o.Id)">
+                            View
+                        </button>
+
+                        <AuthorizeView>
+                            <Authorized>
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => EditObituary(o.Id)">
+                                    Update
+                                </button>
+                            </Authorized>
+                        </AuthorizeView>
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <button class="btn btn-secondary" @onclick="PreviousPage" disabled="@(!CanGoPrevious)">
+            Previous
+        </button>
+
+        <span>Page @pageNumber of @totalPages</span>
+
+        <button class="btn btn-secondary" @onclick="NextPage" disabled="@(!CanGoNext)">
+            Next
+        </button>
+    </div>
+}
+
+@code {
+    private List<ObituaryResponse>? obituaries;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string? searchTerm;
+
+    private int pageNumber = 1;
+    private int pageSize = 5;
+    private int totalPages = 1;
+
+    private bool CanGoPrevious => pageNumber > 1;
+    private bool CanGoNext => pageNumber < totalPages;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadObituariesAsync();
+    }
+
+    private async Task LoadObituariesAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await ObituariesService.GetObituariesAsync(pageNumber, pageSize, searchTerm);
+
+            if (result != null)
+            {
+                obituaries = result.Data;
+                pageNumber = result.PageNumber;
+                pageSize = result.PageSize;
+                totalPages = result.TotalPages;
+            }
+            else
+            {
+                errorMessage = "Failed to load obituaries.";
+                obituaries = new();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (CanGoPrevious)
+        {
+            pageNumber--;
+            await LoadObituariesAsync();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (CanGoNext)
+        {
+            pageNumber++;
+            await LoadObituariesAsync();
+        }
+    }
+
+    [Inject] public required NavigationManager NavManager { get; set; }
+
+    private void ViewObituary(int id)
+    {
+        NavManager.NavigateTo($"/obituaries/{id}");
+    }
+
+    private void EditObituary(int id)
+    {
+        NavManager.NavigateTo($"/obituaries/edit/{id}");
+    }
+
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString();
+        pageNumber = 1;
+        await LoadObituariesAsync();
+    }
+
+}

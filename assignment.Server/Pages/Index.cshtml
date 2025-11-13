@@ -1,0 +1,50 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Memorial Obituary System</h1>
+    <p class="lead">Honor and remember those who have passed away</p>
+
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">View Obituaries</h5>
+                    <p class="card-text">Browse through memorial tributes and remember loved ones.</p>
+                    <a asp-page="/Obituaries/Index" class="btn btn-primary">View All Obituaries</a>
+                </div>
+            </div>
+        </div>
+
+        @if (User.Identity?.IsAuthenticated ?? false)
+        {
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Create Memorial</h5>
+                        <p class="card-text">Register an obituary to honor someone special.</p>
+                        <a asp-page="/Obituaries/Create" class="btn btn-success">Create Obituary</a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"> Sign in to createl</h5>
+                        <p class="card-text">Register an obituary to honor someone special.</p>
+            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary">
+                Sign in to create
+            </a>                    </div>
+                </div>
+            </div>
+
+        }
+    </div>
+</div>

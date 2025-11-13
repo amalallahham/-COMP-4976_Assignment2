@@ -1,0 +1,16 @@
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.vspscc
+
+# Debug and runtime artifacts
+*.pdb
+*.dll
+*.exe
+*.log
+
+# ASP.NET static asset manifests
+*.staticwebassets.endpoints.json

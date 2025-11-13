@@ -1,0 +1,55 @@
+@page "/login"
+@using assignment.Client.Models
+@inject assignment.Client.Services.IAuthService AuthService
+@inject NavigationManager NavManager
+
+<h3>Login</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<EditForm Model="model" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <InputText class="form-control" @bind-Value="model.Email" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <InputText class="form-control" type="password" @bind-Value="model.Password" />
+    </div>
+
+    <button class="btn btn-primary" type="submit" disabled="@isSubmitting">
+        @(isSubmitting ? "Logging in..." : "Login")
+    </button>
+</EditForm>
+
+@code {
+    private LoginRequest model = new();
+    private string? errorMessage;
+    private bool isSubmitting;
+
+    private async Task HandleValidSubmit()
+    {
+        errorMessage = null;
+        isSubmitting = true;
+
+        var ok = await AuthService.LoginAsync(model.Email, model.Password);
+
+        isSubmitting = false;
+
+        if (ok)
+        {
+            NavManager.NavigateTo("/obituaries");
+        }
+        else
+        {
+            errorMessage = "Invalid login.";
+        }
+    }
+}

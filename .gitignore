@@ -1,0 +1,104 @@
+## ---------------------------
+## .NET & Visual Studio
+## ---------------------------
+# Build results
+bin/
+obj/
+out/
+Debug/
+Release/
+
+# User-specific files
+*.user
+*.suo
+*.userprefs
+*.pidb
+*.svd
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Visual Studio
+.vs/
+
+# Auto-generated project files
+Generated/
+Generated/**
+
+## ---------------------------
+## ASP.NET / Razor Pages / Blazor
+## ---------------------------
+
+# Localhost certs
+*.pfx
+*.p12
+
+# Publish artifacts
+wwwroot/dist/
+wwwroot/*bundle*.js
+wwwroot/*bundle*.css
+
+# Blazor WebAssembly output (auto-generated)
+Client/bin/
+Client/obj/
+Client/wwwroot/_framework/
+Client/wwwroot/_content/
+Client/wwwroot/service-worker-assets.js
+
+# Temporary files from dotnet watch
+.hotreload/
+.hot_reload/
+*.dotnetwatch.json
+
+## ---------------------------
+## Aspire
+## ---------------------------
+
+# Aspire tools & environment
+.env
+.env.*
+.env.local
+*.aspirehost
+
+# Aspire orchestrator temp data
+AppHost/bin/
+AppHost/obj/
+
+# Aspire service defaults
+ServiceDefaults/bin/
+ServiceDefaults/obj/
+
+# Aspire generated container assets
+**/*.container.props
+**/*.container.targets
+
+## ---------------------------
+## Logging / temp / cache
+## ---------------------------
+logs/
+*.log
+*.tlog
+*.cache
+*.tmp
+
+## ---------------------------
+## OS-specific
+## ---------------------------
+# Windows
+Thumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+## ---------------------------
+## Node (if any front-end assets)
+## ---------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

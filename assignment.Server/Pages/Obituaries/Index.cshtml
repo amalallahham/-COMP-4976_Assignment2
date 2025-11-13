@@ -1,0 +1,124 @@
+﻿@page
+@using System.Security.Claims
+@model ObituaryApplication.Pages.Obituaries.IndexModel
+@{
+    ViewData["Title"] = "Obituaries";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Obituaries</h2>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a asp-page="/Obituaries/Create" class="btn btn-primary">Create New Obituary</a>
+    }
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form method="get" class="d-flex">
+            <input type="text" name="Search" value="@Model.Search" placeholder="Search by name" class="form-control me-2" />
+            <button type="submit" class="btn btn-outline-primary">Search</button>
+            @if (!string.IsNullOrEmpty(Model.Search))
+            {
+                <a href="/Obituaries" class="btn btn-outline-secondary ms-2">Clear</a>
+            }
+        </form>
+    </div>
+</div>
+
+@if (Model.Obituaries.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Full Name</th>
+                    <th>Date of Birth</th>
+                    <th>Date of Death</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var ob in Model.Obituaries)
+                {
+                    <tr>
+                        <td><strong>@ob.FullName</strong></td>
+                        <td>@ob.DOB.ToShortDateString()</td>
+                        <td>@ob.DOD.ToShortDateString()</td>
+                        <td>
+                            <a asp-page="/Obituaries/Details" asp-route-id="@ob.Id" class="btn btn-sm btn-info">View</a>
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                
+                                @if (User.IsInRole("admin") || ob.CreatorId == User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier))
+                                {
+                                    <a asp-page="/Obituaries/Edit" asp-route-id="@ob.Id" class="btn btn-sm btn-warning">Edit</a>
+                                    <a asp-page="/Obituaries/Delete" asp-route-id="@ob.Id" class="btn btn-sm btn-danger">Delete</a>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <h4>No obituaries found</h4>
+        @if (!string.IsNullOrEmpty(Model.Search))
+        {
+            <p>No obituaries match your search for "@Model.Search".</p>
+        }
+        else
+        {
+            <p>There are currently no obituaries to display.</p>
+        }
+        @if (User.IsInRole("admin"))
+        {
+            <p><a asp-page="/Obituaries/Create" class="btn btn-primary">Create the first obituary</a></p>
+        }
+    </div>
+}
+
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Obituary pagination">
+        <ul class="pagination justify-content-center">
+            @if (Model.PageNumber > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-page="/Obituaries/Index" asp-route-PageNumber="1" asp-route-Search="@Model.Search">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" asp-page="/Obituaries/Index" asp-route-PageNumber="@(Model.PageNumber-1)" asp-route-Search="@Model.Search">Previous</a>
+                </li>
+            }
+            
+            <li class="page-item active">
+                <span class="page-link">@Model.PageNumber of @Model.TotalPages</span>
+            </li>
+            
+            @if (Model.PageNumber < Model.TotalPages)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-page="/Obituaries/Index" asp-route-PageNumber="@(Model.PageNumber+1)" asp-route-Search="@Model.Search">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" asp-page="/Obituaries/Index" asp-route-PageNumber="@Model.TotalPages" asp-route-Search="@Model.Search">Last</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+    
+</div>

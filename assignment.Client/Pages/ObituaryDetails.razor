@@ -1,0 +1,146 @@
+@page "/obituaries/{Id:int}"
+@inject HttpClient Http
+@using assignment.Client.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@inject assignment.Client.Services.IObituariesService ObituariesService
+@inject NavigationManager NavManager
+
+<h3>Obituary Details</h3>
+
+<button class="btn btn-link p-0 mb-3" @onclick="GoBack">
+    ⟵ Back to list
+</button>
+
+@if (isLoading)
+{
+    <p>Loading obituary...</p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (obituary is null)
+{
+    <p>Obituary not found.</p>
+}
+else
+{
+    <div class="card">
+        <div class="card-body d-flex gap-3">
+            @if (!string.IsNullOrEmpty(obituary.PhotoPath))
+            {
+                <img src="@GetPhotoUrl(obituary.PhotoPath)" alt="@obituary.FullName"
+                    style="max-width:150px; max-height:150px; object-fit:cover;" />
+            }
+
+
+            <div>
+                <h4>@obituary.FullName</h4>
+
+                <p>
+                    <strong>Date of Birth:</strong>
+                    @(obituary.DOB?.ToString("yyyy-MM-dd") ?? "-")
+                </p>
+                <p>
+                    <strong>Date of Death:</strong>
+                    @(obituary.DOD?.ToString("yyyy-MM-dd") ?? "-")
+                </p>
+                <p>
+                    <strong>Created by:</strong> @obituary.CreatorEmail
+                </p>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <h5>Biography / Tribute</h5>
+            <p>@obituary.Biography</p>
+        </div>
+    </div>
+
+    <CascadingAuthenticationState>
+        <AuthorizeView>
+            <Authorized>
+                <button class="btn btn-danger mt-3" @onclick="ConfirmDelete">
+                    Delete Obituary
+                </button>
+            </Authorized>
+        </AuthorizeView>
+    </CascadingAuthenticationState>
+}
+
+@code {
+
+    private string GetPhotoUrl(string? photoPath)
+    {
+        if (string.IsNullOrWhiteSpace(photoPath))
+            return string.Empty;
+
+        // If the server ever returns an absolute URL, just use it
+        if (photoPath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            return photoPath;
+
+        // Combine API base address with relative path (/uploads/...)
+        var baseUri = Http.BaseAddress?.ToString() ?? string.Empty;
+        if (!baseUri.EndsWith("/"))
+        {
+            baseUri += "/";
+        }
+
+        // Trim any leading slash from photoPath to avoid double-slash
+        var relative = photoPath.TrimStart('/');
+
+        return $"{baseUri}{relative}";
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (obituary == null) return;
+
+        // You could add a JS confirm here if you want
+        var ok = await ObituariesService.DeleteObituaryAsync(obituary.Id);
+
+        if (ok)
+        {
+            NavManager.NavigateTo("/obituaries");
+        }
+        else
+        {
+            errorMessage = "Failed to delete obituary.";
+        }
+    }
+
+    [Parameter] public int Id { get; set; }
+
+    private ObituaryResponse? obituary;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            obituary = await ObituariesService.GetObituaryAsync(Id);
+
+            if (obituary == null)
+            {
+                errorMessage = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading obituary: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/obituaries");
+    }
+}

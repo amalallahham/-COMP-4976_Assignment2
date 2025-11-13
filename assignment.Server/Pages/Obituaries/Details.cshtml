@@ -1,0 +1,40 @@
+@page "{id:int}"
+@using System.Security.Claims
+@model ObituaryApplication.Pages.Obituaries.DetailsModel
+@{
+    ViewData["Title"] = "Obituary Details";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>@Model.Obituary.FullName</h2>
+            <div class="obituary-details">
+                <p><strong>Date of Birth:</strong> @Model.Obituary.DOB.ToShortDateString()</p>
+                <p><strong>Date of Death:</strong> @Model.Obituary.DOD.ToShortDateString()</p>
+                
+                @if (!string.IsNullOrEmpty(Model.Obituary.PhotoPath))
+                {
+                    <div class="obituary-photo mb-3">
+                        <img src="@Model.Obituary.PhotoPath" alt="@Model.Obituary.FullName" class="img-fluid" style="max-width: 300px;" />
+                    </div>
+                }
+                
+                <div class="biography">
+                    <h4>Biography / Tribute</h4>
+                    <p>@Html.Raw(Html.Encode(Model.Obituary.Biography).Replace("\n", "<br />"))</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <a asp-page="/Obituaries/Index" class="btn btn-secondary">Back to List</a>
+        
+        @if (User.IsInRole("admin") || Model.Obituary.CreatorId == User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier))
+        {
+            <a asp-page="/Obituaries/Edit" asp-route-id="@Model.Obituary.Id" class="btn btn-warning">Edit</a>
+            <a asp-page="/Obituaries/Delete" asp-route-id="@Model.Obituary.Id" class="btn btn-danger">Delete</a>
+        }
+    </div>
+</div>

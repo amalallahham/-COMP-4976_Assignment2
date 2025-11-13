@@ -1,0 +1,164 @@
+@page "/obituaries/create"
+@using assignment.Client.Models
+@using System.IO
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Authorization
+@inject assignment.Client.Services.IObituariesService ObituariesService
+@inject NavigationManager NavManager
+
+<AuthorizeView>
+    <Authorized Context="authState">
+        <h3>Create Obituary</h3>
+
+        @if (!string.IsNullOrEmpty(formError))
+        {
+            <div class="alert alert-danger">@formError</div>
+        }
+
+        <EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <InputText class="form-control" @bind-Value="model.FullName" />
+                <ValidationMessage For="@(() => model.FullName)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Date of Birth</label>
+                <InputDate class="form-control" @bind-Value="model.DOB" />
+                <ValidationMessage For="@(() => model.DOB)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Date of Death</label>
+                <InputDate class="form-control" @bind-Value="model.DOD" />
+                <ValidationMessage For="@(() => model.DOD)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Biography / Tribute</label>
+                <InputTextArea class="form-control" rows="5" @bind-Value="model.Biography" />
+                <ValidationMessage For="@(() => model.Biography)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Photo (optional)</label>
+                <InputFile OnChange="OnPhotoSelected" />
+
+                @if (!string.IsNullOrEmpty(previewImageUrl))
+                {
+                    <div class="mt-2">
+                        <img src="@previewImageUrl"
+                             alt="Selected photo preview"
+                             class="img-thumbnail"
+                             style="max-width: 150px; max-height: 150px;" />
+                    </div>
+                }
+            </div>
+
+            <button class="btn btn-primary" type="submit" disabled="@isSubmitting">
+                @(isSubmitting ? "Saving..." : "Create")
+            </button>
+            <button class="btn btn-secondary ms-2" type="button" @onclick="GoBack">
+                Cancel
+            </button>
+        </EditForm>
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning mt-3">
+            You must be logged in to create an obituary.
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private CreateObituaryRequest model = new();
+    private IBrowserFile? photoFile;
+    private string? previewImageUrl;
+
+    private EditContext _editContext = default!;
+    private ValidationMessageStore? _messageStore;
+
+    private string? formError;
+    private bool isSubmitting;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(model);
+        _messageStore = new ValidationMessageStore(_editContext);
+
+        // When user edits a field, clear its errors + the banner
+        _editContext.OnFieldChanged += HandleFieldChanged;
+    }
+
+    private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
+    {
+        if (_messageStore == null)
+            return;
+
+        _messageStore.Clear(e.FieldIdentifier);
+        formError = null;
+        _editContext.NotifyValidationStateChanged();
+    }
+
+    private async Task OnPhotoSelected(InputFileChangeEventArgs e)
+    {
+        photoFile = e.File;
+        previewImageUrl = null;
+
+        if (photoFile is not null)
+        {
+            using var stream = photoFile.OpenReadStream(2 * 1024 * 1024); // 2 MB preview max
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var bytes = ms.ToArray();
+            var base64 = Convert.ToBase64String(bytes);
+            previewImageUrl = $"data:{photoFile.ContentType};base64,{base64}";
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        formError = null;
+        isSubmitting = true;
+
+        // Clear old messages
+        _messageStore?.Clear();
+
+        var result = await ObituariesService.CreateObituaryAsync(model, photoFile);
+
+        isSubmitting = false;
+
+        if (result.Success)
+        {
+            NavManager.NavigateTo("/obituaries");
+            return;
+        }
+
+        // Show a general error if any
+        formError = result.ErrorMessage ?? "Failed to create obituary.";
+
+        // Map server field errors -> Blazor ValidationMessages
+        if (_messageStore != null && result.FieldErrors.Any())
+        {
+            foreach (var kvp in result.FieldErrors)
+            {
+                var fieldIdentifier = new FieldIdentifier(model, kvp.Key);
+
+                foreach (var error in kvp.Value)
+                {
+                    _messageStore.Add(fieldIdentifier, error);
+                }
+            }
+
+            _editContext.NotifyValidationStateChanged();
+        }
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/obituaries");
+    }
+}
