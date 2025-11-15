@@ -38,8 +38,6 @@ dotnet watch
 5. Click "Rewrite with AI"
 6. See the magic! ✨
 
-## That's It!
-
 If you get errors:
 - **"Connection refused"** → Ollama isn't running. Start it with `ollama serve`
 - **"Model not found"** → Run `ollama pull llama3:latest`

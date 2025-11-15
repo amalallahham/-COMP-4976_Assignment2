@@ -239,14 +239,6 @@ The `CleanObituaryText` method removes:
 - Empty lines
 - Phrases like "formal and respectful tone"
 
-## Future Enhancements (Optional)
-
-- Add model selection dropdown in UI
-- Cache responses for similar inputs
-- Add streaming support for real-time text generation
-- Support for multiple languages
-- Custom prompt templates
-
 ## Notes
 
 - Ollama runs locally, so no API keys are needed
