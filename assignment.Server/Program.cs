@@ -54,6 +54,11 @@ builder.Services
     });
 
 // -----------------------------
+// HttpClient for external API calls
+// -----------------------------
+builder.Services.AddHttpClient();
+
+// -----------------------------
 // Controllers + Swagger
 // -----------------------------
 builder.Services.AddControllers();

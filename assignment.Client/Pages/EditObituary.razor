@@ -51,6 +51,15 @@
                         <label class="form-label">Biography / Tribute</label>
                         <InputTextArea class="form-control" rows="5" @bind-Value="model.Biography" />
                         <ValidationMessage For="@(() => model.Biography)" />
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm" @onclick="RewriteWithAI" disabled="@isRewriting">
+                                @(isRewriting ? "Rewriting..." : "Rewrite with AI")
+                            </button>
+                            @if (!string.IsNullOrEmpty(aiErrorMessage))
+                            {
+                                <span class="text-danger ms-2">@aiErrorMessage</span>
+                            }
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -115,6 +124,8 @@
     private bool isSubmitting = false;
     private string? errorMessage;
     private string? formError;
+    private bool isRewriting = false;
+    private string? aiErrorMessage;
 
     private string? existingPhotoPath;
     private string? previewImageUrl;
@@ -245,5 +256,53 @@
     private void GoBack()
     {
         NavManager.NavigateTo($"/obituaries/{Id}");
+    }
+
+    private async Task RewriteWithAI()
+    {
+        if (string.IsNullOrWhiteSpace(model.Biography))
+        {
+            aiErrorMessage = "Please enter some text to rewrite.";
+            return;
+        }
+
+        isRewriting = true;
+        aiErrorMessage = null;
+
+        try
+        {
+            var request = new { text = model.Biography };
+            var response = await Http.PostAsJsonAsync("api/ai/rewrite", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var rewrittenText = await response.Content.ReadAsStringAsync();
+                // Remove JSON quotes if present
+                if (rewrittenText.StartsWith("\"") && rewrittenText.EndsWith("\""))
+                {
+                    rewrittenText = System.Text.Json.JsonSerializer.Deserialize<string>(rewrittenText) ?? rewrittenText;
+                }
+                if (!string.IsNullOrEmpty(rewrittenText))
+                {
+                    model.Biography = rewrittenText;
+                    _editContext.NotifyValidationStateChanged();
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                aiErrorMessage = $"AI rewrite failed: {response.StatusCode}";
+                Console.WriteLine($"AI rewrite failed: {response.StatusCode} - {errorContent}");
+            }
+        }
+        catch (Exception ex)
+        {
+            aiErrorMessage = "AI rewrite failed. Please try again.";
+            Console.WriteLine($"AI rewrite error: {ex.Message}");
+        }
+        finally
+        {
+            isRewriting = false;
+        }
     }
 }
