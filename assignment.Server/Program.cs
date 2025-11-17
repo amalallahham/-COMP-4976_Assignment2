@@ -13,11 +13,13 @@ var builder = WebApplication.CreateBuilder(args);
 // -----------------------------
 // Data + Identity
 // -----------------------------
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+// var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+//     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+// builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//     options.UseSqlite(connectionString));
+
+builder.AddSqlServerDbContext<ApplicationDbContext>("sqldata");
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
