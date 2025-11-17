@@ -1,89 +1,102 @@
 @page "/obituaries"
 @using assignment.Client.Models
 @inject assignment.Client.Services.IObituariesService ObituariesService
-
 @using Microsoft.AspNetCore.Components.Authorization
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Obituaries</h3>
+<div class="card shadow-sm p-4">
 
-    <AuthorizeView>
-        <Authorized>
-            <button class="btn btn-primary" @onclick='() => NavManager.NavigateTo("/obituaries/create")'>
-                Create Obituary
-            </button>
-        </Authorized>
-    </AuthorizeView>
-</div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">Obituaries</h3>
 
-<input value="@searchTerm" @oninput="OnSearchChanged" placeholder="Search by name..." class="form-control mb-3" />
-
-@if (isLoading)
-{
-    <p>Loading obituaries...</p>
-}
-else if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
-else if (obituaries is null || obituaries.Count == 0)
-{
-    <p>No obituaries found.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Full Name</th>
-                <th>Date of Birth</th>
-                <th>Date of Death</th>
-                <th>Biography</th>
-                <th>Created By</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var o in obituaries)
-            {
-                <tr>
-                    <td>@o.FullName</td>
-                    <td>@(o.DOB?.ToString("yyyy-MM-dd") ?? "-")</td>
-                    <td>@(o.DOD?.ToString("yyyy-MM-dd") ?? "-")</td>
-                    <td>@o.Biography</td>
-                    <td>@o.CreatorEmail</td>
-
-                    <td>
-                        <button class="btn btn-primary btn-sm me-2" @onclick="() => ViewObituary(o.Id)">
-                            View
-                        </button>
-
-                        <AuthorizeView>
-                            <Authorized>
-                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => EditObituary(o.Id)">
-                                    Update
-                                </button>
-                            </Authorized>
-                        </AuthorizeView>
-                    </td>
-
-                </tr>
-            }
-
-        </tbody>
-    </table>
-
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <button class="btn btn-secondary" @onclick="PreviousPage" disabled="@(!CanGoPrevious)">
-            Previous
-        </button>
-
-        <span>Page @pageNumber of @totalPages</span>
-
-        <button class="btn btn-secondary" @onclick="NextPage" disabled="@(!CanGoNext)">
-            Next
-        </button>
+        <AuthorizeView>
+            <Authorized>
+                <button class="btn btn-primary shadow-sm" @onclick='() => NavManager.NavigateTo("/obituaries/create")'>
+                    Create Obituary
+                </button>
+            </Authorized>
+        </AuthorizeView>
     </div>
-}
+
+    <input value="@searchTerm"
+           @oninput="OnSearchChanged"
+           placeholder="Search by name..."
+           class="form-control mb-3 shadow-sm" />
+
+    @if (isLoading)
+    {
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2 text-muted">Loading obituaries...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger shadow-sm">@errorMessage</div>
+    }
+    else if (obituaries is null || obituaries.Count == 0)
+    {
+        <div class="alert alert-info shadow-sm">No obituaries found.</div>
+    }
+    else
+    {
+        <table class="table table-striped table-hover shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th>Full Name</th>
+                    <th>Date of Birth</th>
+                    <th>Date of Death</th>
+                    <th>Biography</th>
+                    <th>Created By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var o in obituaries)
+                {
+                    <tr>
+                        <td class="fw-semibold">@o.FullName</td>
+                        <td>@(o.DOB?.ToString("yyyy-MM-dd") ?? "-")</td>
+                        <td>@(o.DOD?.ToString("yyyy-MM-dd") ?? "-")</td>
+                        <td>@TruncateBiography(o.Biography)</td>
+                        <td>@o.CreatorEmail</td>
+
+                        <td>
+                            <button class="btn btn-primary btn-sm me-2 shadow-sm"
+                                    @onclick="() => ViewObituary(o.Id)">
+                                View
+                            </button>
+
+                            <AuthorizeView>
+                                <Authorized>
+                                    <button class="btn btn-outline-secondary btn-sm shadow-sm"
+                                            @onclick="() => EditObituary(o.Id)">
+                                        Update
+                                    </button>
+                                </Authorized>
+                            </AuthorizeView>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <button class="btn btn-secondary shadow-sm"
+                    @onclick="PreviousPage"
+                    disabled="@(!CanGoPrevious)">
+                Previous
+            </button>
+
+            <span class="fw-semibold">Page @pageNumber of @totalPages</span>
+
+            <button class="btn btn-secondary shadow-sm"
+                    @onclick="NextPage"
+                    disabled="@(!CanGoNext)">
+                Next
+            </button>
+        </div>
+    }
+</div>
 
 @code {
     private List<ObituaryResponse>? obituaries;
@@ -171,5 +184,18 @@ else
         pageNumber = 1;
         await LoadObituariesAsync();
     }
+private string TruncateBiography(string? bio, int wordCount = 10)
+{
+    if (string.IsNullOrWhiteSpace(bio))
+        return "-";
+
+    var words = bio.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+    if (words.Length <= wordCount)
+        return bio; // already short
+
+    return string.Join(" ", words.Take(wordCount)) + "...";
+}
+
 
 }

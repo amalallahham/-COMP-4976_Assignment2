@@ -5,7 +5,10 @@ namespace ObituaryApplication.Data
 {
     public static class DbInitializer
     {
-        public static async Task Seed(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext context)
+        public static async Task Seed(
+            UserManager<IdentityUser> userManager,
+            RoleManager<IdentityRole> roleManager,
+            ApplicationDbContext context)
         {
             // 1️⃣ Create roles if they don't exist
             if (!await roleManager.RoleExistsAsync("admin"))
@@ -24,6 +27,7 @@ namespace ObituaryApplication.Data
                     Email = "aa@aa.aa",
                     EmailConfirmed = true
                 };
+
                 await userManager.CreateAsync(admin, "P@$$w0rd");
                 await userManager.AddToRoleAsync(admin, "admin");
             }
@@ -38,11 +42,12 @@ namespace ObituaryApplication.Data
                     Email = "uu@uu.uu",
                     EmailConfirmed = true
                 };
+
                 await userManager.CreateAsync(user, "P@$$w0rd");
                 await userManager.AddToRoleAsync(user, "user");
             }
 
-            // 4️⃣ Create obituary records for the seeded users
+            // 4️⃣ Seed obituary records
             if (!context.Obituaries.Any())
             {
                 var obituaries = new List<Obituary>
@@ -53,7 +58,7 @@ namespace ObituaryApplication.Data
                         DOB = new DateTime(1980, 1, 1),
                         DOD = new DateTime(2023, 12, 31),
                         Biography = "Admin User (aa@aa.aa) was a dedicated system administrator who managed the obituary platform with care and precision. Known for their attention to detail and commitment to preserving memories for families.",
-                        CreatorId = admin.Id  // Created by admin
+                        CreatorId = admin.Id
                     },
                     new Obituary
                     {
@@ -61,7 +66,23 @@ namespace ObituaryApplication.Data
                         DOB = new DateTime(1985, 6, 15),
                         DOD = new DateTime(2024, 1, 15),
                         Biography = "Regular User (uu@uu.uu) was a valued member of the community who actively participated in the obituary system. They will be remembered for their kindness and dedication to preserving family histories.",
-                        CreatorId = user.Id  // Created by regular user
+                        CreatorId = user.Id
+                    },
+                    new Obituary
+                    {
+                        FullName = "John Doe",
+                        DOB = new DateTime(1950, 5, 12),
+                        DOD = new DateTime(2022, 9, 18),
+                        Biography = "John Doe was a beloved member of the community...",
+                        CreatorId = admin.Id
+                    },
+                    new Obituary
+                    {
+                        FullName = "Jane Smith",
+                        DOB = new DateTime(1960, 3, 22),
+                        DOD = new DateTime(2021, 2, 1),
+                        Biography = "Jane Smith enjoyed gardening and spending time with family...",
+                        CreatorId = user.Id
                     }
                 };
 

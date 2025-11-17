@@ -123,9 +123,12 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<ApplicationDbContext>();
+        context.Database.Migrate();
+        
     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    var context = services.GetRequiredService<ApplicationDbContext>();
     await DbInitializer.Seed(userManager, roleManager, context);
 }
 
