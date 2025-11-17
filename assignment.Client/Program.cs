@@ -21,7 +21,7 @@ builder.Services.AddScoped<IAuthService>(sp =>
 {
     var httpClient = new HttpClient(new HttpClientHandler())
     {
-        BaseAddress = new Uri("http://localhost:5141/")
+        BaseAddress = new Uri("https://localhost:7184/")
     };
     var jsRuntime = sp.GetRequiredService<IJSRuntime>();
     var authStateProvider = sp.GetRequiredService<AuthenticationStateProvider>();
@@ -42,7 +42,7 @@ builder.Services.AddScoped<HttpClient>(sp =>
     var handler = sp.GetRequiredService<JwtAuthorizationMessageHandler>();
     return new HttpClient(handler)
     {
-        BaseAddress = new Uri("http://localhost:5141/")
+        BaseAddress = new Uri("https://localhost:7184/")
     };
 });
 

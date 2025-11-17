@@ -105,16 +105,18 @@ builder.Services.AddRazorPages();
 // -----------------------------
 // CORS
 // -----------------------------
+// ---- CORS ----
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazorClient", policy =>
+    options.AddDefaultPolicy(policy =>
     {
         policy
-            .AllowAnyOrigin()   
+            .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
+
 
 
 var app = builder.Build();
@@ -151,7 +153,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 
-app.UseCors("AllowBlazorClient");
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
