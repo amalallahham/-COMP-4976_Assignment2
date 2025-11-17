@@ -29,10 +29,7 @@ namespace assignment.Client.Services
             _authService = authService;
         }
 
-        /// <summary>
-        /// Reads JWT from storage via AuthService and attaches it to Authorization header.
-        /// Used for protected endpoints (create, update, delete).
-        /// </summary>
+
         private async Task AddAuthHeaderAsync()
         {
             // Clear any previous value to avoid stacking
